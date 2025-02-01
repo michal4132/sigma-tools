@@ -38,7 +38,8 @@ int __system_property_add(const char *name, unsigned int namelen,
 	if (namelen < 1)
 		return -1;
 
-	//printf("name: %s value: %s\n", name, value);
+	printf("Adding property: name='%s' (len=%u) value='%s' (len=%u)\n", 
+		   name, namelen, value, valuelen);
 
 	return nvram_set(name, value, 0);
 }
@@ -74,14 +75,19 @@ static int property_set_impl(const char* name, const char* value)
 	size_t namelen = strlen(name);
 	size_t valuelen = strlen(value);
 
-	if (!is_legal_property_name(name, namelen))
+	if (!is_legal_property_name(name, namelen)) {
+		printf("Illegal property name: '%s'\n", name);
 		return -1;
+	}
 
-	if (valuelen >= PROP_VALUE_MAX)
+	if (valuelen >= PROP_VALUE_MAX) {
+		printf("Value too long: '%s' (len=%zu)\n", value, valuelen);
 		return -1;
+	}
 
 	int rc = __system_property_add(name, namelen, value, valuelen);
 	if (rc < 0) {
+		printf("Failed to add property: '%s'='%s'\n", name, value);
 		return rc;
 	}
 
@@ -156,8 +162,11 @@ static void load_properties_from_file(const char* filename, const char* filter)
  */
 static void load_properties(char *data, const char *filter)
 {
-	char *key, *value, *eol, *sol, *tmp, *fn;
+	char *key = NULL;
+	char *value, *eol, *sol, *tmp, *fn;
 	size_t flen = 0;
+	std::string current_value;
+	bool in_continuation = false;
 
 	if (filter) {
 		flen = strlen(filter);
@@ -165,18 +174,68 @@ static void load_properties(char *data, const char *filter)
 
 	sol = data;
 	while ((eol = strchr(sol, '\n'))) {
-		key = sol;
 		*eol++ = 0;
-		sol = eol;
+		printf("\nProcessing line: '%s'\n", sol);
 
-		while (isspace(*key)) key++;
-		if (*key == '#') continue;
+		// If in continuation mode, treat empty lines as part of the value
+		if (in_continuation) {
+			size_t len = strlen(sol);
+			bool has_continuation = (len > 0 && sol[len-1] == '\\');
+			
+			if (has_continuation) {
+				sol[len-1] = '\0';
+				current_value += sol;
+				current_value += '\n';  // Add newline only when continuing
+				printf("Continuation line (more coming): '%s'\n", sol);
+			} else {
+				current_value += sol;  // Last line doesn't get a newline
+				printf("Last continuation line: '%s'\n", sol);
+				printf("Final multi-line value: '%s'\n", current_value.c_str());
+				
+				// End continuation mode
+				in_continuation = false;
+				
+				if (flen > 0) {
+					if (filter[flen - 1] == '*') {
+						if (!strncmp(key, filter, flen - 1)) {
+							init_property_set(key, current_value.c_str());
+						}
+					} else {
+						if (!strcmp(key, filter)) {
+							init_property_set(key, current_value.c_str());
+						}
+					}
+				} else {
+					init_property_set(key, current_value.c_str());
+				}
+			}
+			
+			sol = eol;
+			continue;
+		}
+
+		// Skip empty lines when not in continuation mode
+		if (*sol == '\0') {
+			printf("Skipping empty line\n");
+			sol = eol;
+			continue;
+		}
+
+		// Skip leading whitespace
+		while (isspace(*sol)) sol++;
+
+		// Skip comments
+		if (*sol == '#') {
+			printf("Skipping comment line\n");
+			sol = eol;
+			continue;
+		}
 
 		tmp = eol - 2;
-		while ((tmp > key) && isspace(*tmp)) *tmp-- = 0;
+		while ((tmp > sol) && isspace(*tmp)) *tmp-- = 0;
 
-		if (!strncmp(key, "import ", 7) && flen == 0) {
-			fn = key + 7;
+		if (!strncmp(sol, "import ", 7) && flen == 0) {
+			fn = sol + 7;
 			while (isspace(*fn)) fn++;
 
 			key = strchr(fn, ' ');
@@ -185,27 +244,81 @@ static void load_properties(char *data, const char *filter)
 				while (isspace(*key)) key++;
 			}
 
+			printf("Processing import: '%s' filter='%s'\n", fn, key ? key : "null");
 			load_properties_from_file(fn, key);
 
 		} else {
-			value = strchr(key, '=');
-			if (!value) continue;
+			value = strchr(sol, '=');
+			if (!value) {
+				printf("Skipping line without '=': '%s'\n", sol);
+				sol = eol;
+				continue;
+			}
 			*value++ = 0;
+			key = sol;
 
+			// Remove trailing whitespace from key
 			tmp = value - 2;
 			while ((tmp > key) && isspace(*tmp)) *tmp-- = 0;
 
+			// Remove leading whitespace from value
 			while (isspace(*value)) value++;
 
-			if (flen > 0) {
-				if (filter[flen - 1] == '*') {
-					if (strncmp(key, filter, flen - 1)) continue;
+			printf("Found key-value pair: '%s'='%s'\n", key, value);
+
+			// Check if this value ends with backslash
+			size_t len = strlen(value);
+			if (len > 0 && value[len-1] == '\\') {
+				// Start continuation mode
+				in_continuation = true;
+				value[len-1] = '\0';
+				current_value = value;
+				current_value += '\n';  // Add newline since we're continuing
+				printf("Starting multi-line value: '%s'\n", value);
+			} else {
+				if (flen > 0) {
+					if (filter[flen - 1] == '*') {
+						if (!strncmp(key, filter, flen - 1)) {
+							init_property_set(key, value);
+						}
+					} else {
+						if (!strcmp(key, filter)) {
+							init_property_set(key, value);
+						}
+					}
 				} else {
-					if (strcmp(key, filter)) continue;
+					init_property_set(key, value);
 				}
 			}
+		}
+		sol = eol;
+	}
 
-			init_property_set(key, value);
+	// Handle case where file doesn't end with newline
+	if (in_continuation && sol && *sol) {
+		size_t len = strlen(sol);
+		bool has_continuation = (len > 0 && sol[len-1] == '\\');
+		
+		if (has_continuation) {
+			sol[len-1] = '\0';
+			current_value += sol;
+			current_value += '\n';  // Add newline only when continuing
+		} else {
+			current_value += sol;  // Last line doesn't get a newline
+		}
+		
+		if (flen > 0) {
+			if (filter[flen - 1] == '*') {
+				if (!strncmp(key, filter, flen - 1)) {
+					init_property_set(key, current_value.c_str());
+				}
+			} else {
+				if (!strcmp(key, filter)) {
+					init_property_set(key, current_value.c_str());
+				}
+			}
+		} else {
+			init_property_set(key, current_value.c_str());
 		}
 	}
 }
