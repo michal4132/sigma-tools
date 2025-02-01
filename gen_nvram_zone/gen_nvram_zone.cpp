@@ -105,6 +105,7 @@ bool ReadFdToString(int fd, std::string* content)
 	char buf[BUFSIZ];
 	ssize_t n;
 	while ((n = read(fd, &buf[0], sizeof(buf))) > 0) {
+		n = BUFSIZ; // TODO: fix read return length
 		content->append(buf, n);
 	}
 	return (n == 0) ? true : false;

@@ -286,6 +286,7 @@ int _nvram_generate(struct nvram_header *header, int rehash)
 	/* Generate header */
 	header->magic = NVRAM_MAGIC;
 	header->version = NVRAM_VERSION;
+	header->space_used = 0;
 
 	/* Pointer to data area */
 	ptr = (char *)header + sizeof(struct nvram_header);

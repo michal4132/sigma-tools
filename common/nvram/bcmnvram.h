@@ -107,15 +107,14 @@ extern int nvram_erase(void);
 
 #endif
 
-struct nvram_header {
+struct __attribute__((packed)) nvram_header {
 	uint32_t magic;
 	uint32_t len;
 	uint32_t version;
-	int space_used;
-	unsigned short chksum_protected;
-	unsigned short chksum;
-	unsigned long write_counter;
-	char reserved[4];
+	uint32_t space_used;
+	uint16_t chksum_protected;
+	uint16_t chksum;
+	uint64_t write_counter;
 };
 
 #define NVRAM_HEADER_SIZE  sizeof(struct nvram_header)

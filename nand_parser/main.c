@@ -5,16 +5,17 @@
 #include <errno.h>
 
 #define FLSH_MARKER "FLSH"
-#define EXTRACT_SIZE (32 * 1024)  // 32KB
+#define DEFAULT_EXTRACT_SIZE (0x40000)  // 256KB default
 #define READ_BUFFER_SIZE 4096
 
 void print_usage(const char *program) {
-    printf("NAND Flash Parser - Extract 32KB after FLSH marker\n\n");
-    printf("Usage: %s <input_file> <output_file>\n", program);
+    printf("NAND Flash Parser - Extract data after FLSH marker\n\n");
+    printf("Usage: %s <input_file> <output_file> [--size <size>]\n", program);
     printf("  input_file:  Path to NAND dump file\n");
     printf("  output_file: Path to save extracted data\n");
+    printf("  --size:      Size of data to extract in hex (default: 0x40000)\n");
     printf("\nExample:\n");
-    printf("  %s nand_dump.bin extracted_data.bin\n", program);
+    printf("  %s nand_dump.bin extracted_data.bin --size 0x20000\n", program);
 }
 
 // Find FLSH marker in the buffer
@@ -28,20 +29,46 @@ size_t find_marker(const unsigned char *buffer, size_t size) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 3) {
+    size_t extract_size = DEFAULT_EXTRACT_SIZE;
+    char *input_file_path = NULL;
+    char *output_file_path = NULL;
+
+    // Parse command line arguments
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--size") == 0) {
+            if (i + 1 < argc) {
+                char *endptr;
+                extract_size = strtoul(argv[i + 1], &endptr, 16);
+                if (*endptr != '\0' || extract_size == 0) {
+                    printf("Error: Invalid size parameter\n");
+                    return 1;
+                }
+                i++; // Skip the size value
+            } else {
+                printf("Error: --size requires a value\n");
+                return 1;
+            }
+        } else if (!input_file_path) {
+            input_file_path = argv[i];
+        } else if (!output_file_path) {
+            output_file_path = argv[i];
+        }
+    }
+
+    if (!input_file_path || !output_file_path) {
         print_usage(argv[0]);
         return 1;
     }
 
-    FILE *input_file = fopen(argv[1], "rb");
+    FILE *input_file = fopen(input_file_path, "rb");
     if (!input_file) {
-        printf("Error opening input file '%s': %s\n", argv[1], strerror(errno));
+        printf("Error opening input file '%s': %s\n", input_file_path, strerror(errno));
         return 1;
     }
 
-    FILE *output_file = fopen(argv[2], "wb");
+    FILE *output_file = fopen(output_file_path, "wb");
     if (!output_file) {
-        printf("Error creating output file '%s': %s\n", argv[2], strerror(errno));
+        printf("Error creating output file '%s': %s\n", output_file_path, strerror(errno));
         fclose(input_file);
         return 1;
     }
@@ -52,6 +79,7 @@ int main(int argc, char *argv[]) {
     size_t marker_position = SIZE_MAX;
     size_t bytes_after_marker = 0;
     int marker_found = 0;
+    size_t absolute_marker_position = 0;
 
     // Search for FLSH marker
     while ((bytes_read = fread(buffer, 1, READ_BUFFER_SIZE, input_file)) > 0) {
@@ -59,17 +87,21 @@ int main(int argc, char *argv[]) {
             marker_position = find_marker(buffer, bytes_read);
             if (marker_position != SIZE_MAX) {
                 marker_found = 1;
+                absolute_marker_position = total_bytes_read + marker_position;
+                // Write FLSH marker first
+                fwrite(buffer + marker_position, 1, 4, output_file);
                 // Calculate remaining bytes in current buffer after marker
                 size_t remaining = bytes_read - marker_position - 4;
                 if (remaining > 0) {
-                    size_t to_write = (remaining > EXTRACT_SIZE) ? EXTRACT_SIZE : remaining;
+                    // Adjust extract_size to account for FLSH marker
+                    size_t to_write = (remaining > (extract_size - 4)) ? (extract_size - 4) : remaining;
                     fwrite(buffer + marker_position + 4, 1, to_write, output_file);
                     bytes_after_marker += to_write;
                 }
             }
         } else {
             // Already found marker, continue writing data
-            size_t remaining = EXTRACT_SIZE - bytes_after_marker;
+            size_t remaining = (extract_size - 4) - bytes_after_marker;
             size_t to_write = (bytes_read > remaining) ? remaining : bytes_read;
             
             if (to_write > 0) {
@@ -77,7 +109,7 @@ int main(int argc, char *argv[]) {
                 bytes_after_marker += to_write;
             }
             
-            if (bytes_after_marker >= EXTRACT_SIZE) {
+            if (bytes_after_marker >= (extract_size - 4)) {
                 break;
             }
         }
@@ -90,12 +122,13 @@ int main(int argc, char *argv[]) {
 
     if (!marker_found) {
         printf("Error: FLSH marker not found in input file\n");
-        remove(argv[2]);  // Delete output file
+        remove(output_file_path);  // Delete output file
         return 1;
     }
 
-    printf("Successfully extracted %zu bytes after FLSH marker\n", bytes_after_marker);
-    printf("Marker found at offset: 0x%zX\n", total_bytes_read - bytes_read + marker_position);
+    printf("Successfully extracted 0x%zX bytes (%zu bytes)\n", bytes_after_marker + 4, bytes_after_marker + 4);
+    printf("Marker found at offset: 0x%zX\n", absolute_marker_position);
+    printf("Extraction size: 0x%zX\n", extract_size);
 
     return 0;
 }

@@ -1,2 +1,9 @@
 work/
 
+# Object files
+*.o
+
+# Executables
+env_decoder/env_decoder
+gen_nvram_zone/gen_nvram_zone
+nand_parser/nand_parser
