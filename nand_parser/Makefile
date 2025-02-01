@@ -1,6 +1,6 @@
 CC = clang
 CFLAGS = -Wall -Wextra -O2
-TARGET = nand-extract
+TARGET = nand_extract
 SRCS = main.c
 OBJS = $(SRCS:.c=.o)
 

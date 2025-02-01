@@ -119,6 +119,8 @@ int decode_data(const char *input) {
         return -1;
     }
 
+    printf("AES Key: %s\n", aes_key);
+
     // Step 1: Decode base64 input
     base64_output = malloc(strlen(input));
     if (NULL == base64_output) {

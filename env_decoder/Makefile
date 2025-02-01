@@ -1,9 +1,9 @@
 CC = clang
-CFLAGS = -Wall -Wextra
-TARGET = env-codec
-SRCS = main.c aes.c uni_base64.c
+CFLAGS = -Wall -Wextra -I../common
+TARGET = env_codec
+SRCS = main.c ../common/aes.c ../common/uni_base64.c
 OBJS = $(SRCS:.c=.o)
-HEADERS = aes.h uni_base64.h
+HEADERS = ../common/aes.h ../common/uni_base64.h
 
 .PHONY: all clean rebuild
 
