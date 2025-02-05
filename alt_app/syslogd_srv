@@ -1,0 +1,98 @@
+#!/bin/sh
+
+. /tmp/tuya/env.sh
+
+DAEMON="syslogd"
+PIDFILE="/var/run/$DAEMON.pid"
+CONF_FILE="/tmp/syslog.conf"
+FILE_MAX_SIZE=1024
+SYSLOGD_OPTS="-n -s $FILE_MAX_SIZE -f $CONF_FILE -b 2 -S"
+SYSLOG_PATH=/tmp/syslog
+#user-defined syslog server
+SYSLOG_SERVER="192.168.10.247"
+
+cat << EOF > $CONF_FILE
+kern.*;user.*;daemon.*                      ${SYSLOG_PATH}/messages  #all messages of kern and user facilities
+*.*                                         /dev/null      #this prevents from logging to default log file (-O FILE or /var/log/messages)
+EOF
+
+network()
+{
+    stop
+    sleep 1
+    SYSLOGD_OPTS="$SYSLOGD_OPTS -R $SYSLOG_SERVER"
+    start
+}
+
+start()
+{
+    local status
+    printf 'Starting %s: ' "$DAEMON"
+    start-stop-daemon -b -S -q -m -p "$PIDFILE" -x "$DAEMON" -- $SYSLOGD_OPTS
+    status=$?
+    [ "$status" -eq 0 ] && echo "OK" || echo "FAIL"
+    return "$status"
+}
+
+stop()
+{
+    local status
+    printf 'Stopping %s: ' "$DAEMON"
+    start-stop-daemon -K -q -p "$PIDFILE"
+    status=$?
+    [ "$status" -eq 0 ] && echo "OK" || echo "FAIL"
+
+    [ -e "$PIDFILE" ] && rm "$PIDFILE"
+
+    return "$status"
+}
+
+restart()
+{
+    stop
+    sleep 1
+    start
+}
+
+status()
+{
+    local pid
+    local status
+    pid=`pidof $DAEMON`
+    status=$?
+    [ "$status" -eq 0 ] && echo "$DAEMON is running" || echo "$DAEMON is not running"
+    return $status
+}
+
+is_exceptional()
+{
+    local pid
+    local status
+
+    pid=`pidof $DAEMON`
+    status=$?
+    [ ! "$status" -eq 0 -a -e "$PIDFILE" ] && {
+        echo "$DAEMON is not running, and exceptional"
+        return 0
+    }
+
+    return 1
+}
+
+[ ! -d "$SYSLOG_PATH" ] && mkdir -p $SYSLOG_PATH
+
+case "$1" in
+    start|stop|restart|network)
+        "$1";;
+    reload)
+        restart;;
+    status)
+        status;;
+    is_exceptional)
+        is_exceptional && exit 0 || exit $?;;
+
+    *)
+        echo "Usage: $0 {start|stop|restart|reload}"
+        exit 1
+        ;;
+esac

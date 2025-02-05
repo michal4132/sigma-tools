@@ -1,0 +1,78 @@
+#!/bin/sh
+
+. /tmp/tuya/env.sh
+
+DAEMON="zigbeed"
+PIDFILE="/var/run/$DAEMON.pid"
+ZIGBEED_OPTS="-r spinel+cpc://cpcd_0?iid=1&iid-list=0 -p /tmp/ttyZigbeeNCP"
+
+start()
+{
+    local status
+    printf 'Starting %s: ' "$DAEMON"
+    start-stop-daemon -b -S -q -m -p "$PIDFILE" -x "$DAEMON" -- $ZIGBEED_OPTS
+    status=$?
+    [ "$status" -eq 0 ] && echo "OK" || echo "FAIL"
+    return "$status"
+}
+
+stop()
+{
+    local status
+    printf 'Stopping %s: ' "$DAEMON"
+    start-stop-daemon -K -q -p "$PIDFILE"
+    status=$?
+    [ "$status" -eq 0 ] && echo "OK" || echo "FAIL"
+
+    [ -e "$PIDFILE" ] && rm "$PIDFILE"
+
+    return "$status"
+}
+
+restart()
+{
+    stop
+    sleep 1
+    start
+}
+
+status()
+{
+    local pid
+    local status
+    pid=`pidof $DAEMON`
+    status=$?
+    [ "$status" -eq 0 ] && echo "$DAEMON is running" || echo "$DAEMON is not running"
+    return $status
+}
+
+is_exceptional()
+{
+    local pid
+    local status
+
+    pid=`pidof $DAEMON`
+    status=$?
+    [ ! "$status" -eq 0 -a -e "$PIDFILE" ] && {
+        echo "$DAEMON is not running, and exceptional"
+        return 0
+    }
+
+    return 1
+}
+
+case "$1" in
+    start|stop|restart)
+        "$1";;
+    reload)
+        restart;;
+    status)
+        status;;
+    is_exceptional)
+        is_exceptional && exit 0 || exit $?;;
+
+    *)
+        echo "Usage: $0 {start|stop|restart|reload}"
+        exit 1
+        ;;
+esac

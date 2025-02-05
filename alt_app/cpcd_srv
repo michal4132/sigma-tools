@@ -1,0 +1,88 @@
+#!/bin/sh
+
+. /tmp/tuya/env.sh
+
+DAEMON="cpcd"
+PIDFILE="/var/run/$DAEMON.pid"
+CPCD_OPTS="-c /etc/uart-cpcd.conf"
+
+reset_radio_mod()
+{
+    echo 0 > /sys/class/gpio/gpio47/value;
+    sleep 0.1
+    echo 1 > /sys/class/gpio/gpio47/value;
+    sleep 0.2
+}
+
+start()
+{
+    local status
+    printf 'Starting %s: ' "$DAEMON"
+
+    reset_radio_mod
+    start-stop-daemon -b -S -q -m -p "$PIDFILE" -x "$DAEMON" -- $CPCD_OPTS
+    status=$?
+    [ "$status" -eq 0 ] && echo "OK" || echo "FAIL"
+    return "$status"
+}
+
+stop()
+{
+    local status
+    printf 'Stopping %s: ' "$DAEMON"
+    start-stop-daemon -K -q -p "$PIDFILE"
+    status=$?
+    [ "$status" -eq 0 ] && echo "OK" || echo "FAIL"
+
+    [ -e "$PIDFILE" ] && rm "$PIDFILE"
+
+    return "$status"
+}
+
+restart()
+{
+    stop
+    sleep 1
+    start
+}
+
+status()
+{
+    local pid
+    local status
+    pid=`pidof $DAEMON`
+    status=$?
+    [ "$status" -eq 0 ] && echo "$DAEMON is running" || echo "$DAEMON is not running"
+    return $status
+}
+
+is_exceptional()
+{
+    local pid
+    local status
+
+    pid=`pidof $DAEMON`
+    status=$?
+    [ ! "$status" -eq 0 -a -e "$PIDFILE" ] && {
+        echo "$DAEMON is not running, and exceptional"
+        return 0
+    }
+
+    return 1
+}
+
+case "$1" in
+    start|stop|restart)
+        "$1";;
+    reload)
+        restart;;
+    status)
+        status;;
+    is_exceptional)
+        is_exceptional && exit 0 || exit $?;;
+
+    *)
+        echo "Usage: $0 {start|stop|restart|reload}"
+        exit 1
+        ;;
+esac
