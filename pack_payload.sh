@@ -91,22 +91,31 @@ if ! sudo mksquashfs "$ROOTFS_DIR" "$SQUASHFS_IMG" -comp xz; then
     exit 1
 fi
 
+# Create encrypted image file with matching size
+SQUASHFS_SIZE=$(stat -c %s "$SQUASHFS_IMG")
+dd if=/dev/zero of="$ENCRYPTED_IMG" bs=1 count=0 seek="$SQUASHFS_SIZE"
+
+# Set up loop device
+LOOP_DEVICE=$(sudo losetup -f --show "$ENCRYPTED_IMG")
+
 # Encrypt the SquashFS image
 echo "Encrypting SquashFS image..."
-if ! sudo cryptsetup open --type plain --cipher aes-cbc-essiv:sha256 --key-file "$KEYFILE" "$SQUASHFS_IMG" new_user; then
+if ! sudo cryptsetup open --type plain --cipher aes-cbc-essiv:sha256 --key-file "$KEYFILE" "$LOOP_DEVICE" new_user; then
     echo "Error: Failed to setup encryption"
     rm -f "$KEYFILE" "$SQUASHFS_IMG"
     exit 1
 fi
 
-if ! sudo dd if=/dev/mapper/new_user of="$ENCRYPTED_IMG" bs=4M status=progress; then
+if ! sudo dd if="$SQUASHFS_IMG" of="/dev/mapper/new_user" bs=4M status=progress; then
     echo "Error: Failed to create encrypted image"
     sudo cryptsetup close new_user
+    sudo losetup -d "$LOOP_DEVICE"
     rm -f "$KEYFILE" "$SQUASHFS_IMG"
     exit 1
 fi
 
 sudo cryptsetup close new_user
+sudo losetup -d "$LOOP_DEVICE"
 
 # Cleanup
 rm -f "$KEYFILE" "$SQUASHFS_IMG"
