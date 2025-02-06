@@ -13,11 +13,8 @@ APP_VERSION=$(cat GW_INIT_RUN_DIR/version.txt)
 
 killall udhcpc
 
-# ssh
-enable_ssh=$($NVRAM_PATH/nvram get enable_ssh)
-if [ "$enable_ssh" == "true" ];then
-	dropbear -T 1 -p 22 -R
-fi
+# SSH
+dropbear -T 1 -p 22 -R
 
 # mount -t sysfs sysfs /sys
 eth_addr=$($NVRAM_PATH/nvram get master_mac)
