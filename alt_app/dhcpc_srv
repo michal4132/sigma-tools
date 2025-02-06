@@ -4,7 +4,7 @@
 
 DAEMON="udhcpc"
 PIDFILE="/etc/udhcpc/udhcpc-eth0.pid"
-DHCPC_OPTS="-i eth0 -p $PIDFILE -s /tmp/tuya/udhcpc.script -x hostname:SmartGateway -R"
+DHCPC_OPTS="-i eth0 -p $PIDFILE -x hostname:SmartGateway -R"
 
 start()
 {
