@@ -9,6 +9,7 @@ show_help() {
     echo "  -i, --input DIR     Input directory containing files to pack (default: user_rootfs)"
     echo "  -o, --output FILE   Output encrypted image filename (default: user.img)"
     echo "  -k, --key KEY       Encryption key in hex format (64 characters)"
+    echo "  -s, --size SIZE     Partition size in hex (default: 0x01000000)"
     echo "  -h, --help          Display this help message"
     echo
     echo "Example:"
@@ -20,6 +21,7 @@ show_help() {
 ROOTFS_DIR="user_rootfs"
 ENCRYPTED_IMG="user.img"
 KEY=""
+PARTITION_SIZE="0x01000000"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -38,6 +40,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -k|--key)
             KEY="$2"
+            shift 2
+            ;;
+        -s|--size)
+            PARTITION_SIZE="$2"
             shift 2
             ;;
         *)
@@ -78,6 +84,7 @@ echo "Configuration:"
 echo "- Input directory: $ROOTFS_DIR"
 echo "- Output file: $ENCRYPTED_IMG"
 echo "- Key length: ${#KEY} characters"
+echo "- Partition size: $PARTITION_SIZE"
 echo
 
 # Create the keyfile
@@ -93,7 +100,8 @@ fi
 
 # Create encrypted image file with matching size
 SQUASHFS_SIZE=$(stat -c %s "$SQUASHFS_IMG")
-dd if=/dev/zero of="$ENCRYPTED_IMG" bs=1 count=0 seek="$SQUASHFS_SIZE"
+PARTITION_SIZE_DEC=$((16#${PARTITION_SIZE#0x}))
+dd if=/dev/zero of="$ENCRYPTED_IMG" bs=1 count=0 seek="$PARTITION_SIZE_DEC"
 
 # Set up loop device
 LOOP_DEVICE=$(sudo losetup -f --show "$ENCRYPTED_IMG")
