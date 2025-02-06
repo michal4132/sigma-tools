@@ -2,6 +2,39 @@
 
 A collection of tools for working with Sigma firmware and system images.
 
+## Build System
+
+The project uses a Makefile-based build system with the following main targets:
+
+### Main Targets
+
+- `make` or `make pack` (default) - Builds the socketbridge binary and packs it into an encrypted image
+- `make build` - Builds only the socketbridge binary
+- `make upload` - Builds and uploads the encrypted image to the target device
+- `make clean` - Removes all generated files
+
+### Build Requirements
+
+- ARM GCC toolchain (placed in work/gcc-arm-8.2-2018.08-x86_64-arm-linux-gnueabihf/)
+- Private key file (configured in work/key.mk)
+
+### Private Configuration
+
+The build system requires a private key for image encryption. This should be configured in `work/key.mk`:
+
+```makefile
+PARTITION_KEY="your-64-character-hex-key"
+```
+
+The `work` directory is excluded from git to keep sensitive information private.
+
+### Build Process
+
+1. The socketbridge binary is compiled using the ARM GCC toolchain
+2. The binary is packed into a SquashFS image
+3. The image is encrypted using the provided partition key
+4. The resulting `user0.img` can be uploaded to the device
+
 ## Tools Overview
 
 ### Image Encryption Tools

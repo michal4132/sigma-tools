@@ -2,15 +2,15 @@
 
 . /tmp/tuya/env.sh
 
-DAEMON="socat"
+DAEMON="socketbridge"
 PIDFILE="/var/run/$DAEMON.pid"
-ZIGBEE_SOCAT_OPTS="pty,link=/tmp/ttyZigbeeNCP,raw,echo=0 tcp-l:1234,reuseaddr,fork"
+SOCKETBRIDGE_OPTS=""
 
 start()
 {
     local status
     printf 'Starting %s: ' "$DAEMON"
-    start-stop-daemon -b -S -q -m -p "$PIDFILE" -x "$DAEMON" -- $ZIGBEE_SOCAT_OPTS
+    start-stop-daemon -b -S -q -m -p "$PIDFILE" -x "$DAEMON" -- $SOCKETBRIDGE_OPTS
     status=$?
     [ "$status" -eq 0 ] && echo "OK" || echo "FAIL"
     return "$status"
@@ -72,7 +72,7 @@ case "$1" in
         is_exceptional && exit 0 || exit $?;;
 
     *)
-        echo "Usage: $0 {start|stop|restart|reload}"
+        echo "Usage: $0 {start|stop|restart|reload|status}"
         exit 1
         ;;
 esac

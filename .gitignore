@@ -4,6 +4,8 @@ work/
 *.o
 
 # Executables
-env_decoder/env_decoder
+env_decoder/env_codec
 gen_nvram_zone/gen_nvram_zone
 nand_parser/nand_parser
+alt_app/socketbridge
+user0.img
