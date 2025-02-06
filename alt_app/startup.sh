@@ -62,7 +62,7 @@ echo 1 > /sys/class/gpio/gpio48/value
 /tmp/tuya/dhcpc_srv start
 /tmp/tuya/syslogd_srv start
 /tmp/tuya/mdnsd_srv start
-/tmp/tuya/zigbeed-socat_srv start
+/tmp/tuya/socketbridge_srv start
 
 /tmp/tuya/cpcd_srv start
 /tmp/tuya/zigbeed_srv start
