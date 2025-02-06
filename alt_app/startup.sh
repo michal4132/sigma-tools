@@ -7,35 +7,35 @@ GW_RUN_DIR=/tmp/tuya
 GW_INIT_RUN_DIR=/tuya/app
 GW_DATA_DIR=/tuya/data
 
-APP_VERSION=$(cat GW_INIT_RUN_DIR/version.txt)
+APP_VERSION=$(cat $GW_INIT_RUN_DIR/version.txt)
 
 [ ! -d /var/run ] && mkdir -p /var/run
 
 killall udhcpc
 
+echo root:dupa12 | chpasswd
+
 # SSH
+mkdir -p /etc/dropbear
 dropbear -T 1 -p 22 -R
 
 # mount -t sysfs sysfs /sys
 eth_addr=$($NVRAM_PATH/nvram get master_mac)
-if [ "$eth_addr" != "" ];then
+if [ "$eth_addr" != "" ]; then
 	ifconfig eth0 hw ether $eth_addr
 else
     ifconfig eth0 hw ether 00e04c8196c5
 fi
 
-if [ -z "$APP_VERSION" ];then
+if [ -z "$APP_VERSION" ]; then
     echo "No APP Version"
-    exit -1
+    exit 1
 fi
 
 echo "Mod start"
 
 rm -rf $GW_RUN_DIR
 mkdir -p $GW_RUN_DIR
-
-rm -rf $GW_DATA_DIR
-mkdir -p $GW_DATA_DIR
 
 cp -r $GW_INIT_RUN_DIR/* $GW_RUN_DIR
 
@@ -69,4 +69,3 @@ echo 1 > /sys/class/gpio/gpio48/value
 
 echo "End"
 exit 0
-
