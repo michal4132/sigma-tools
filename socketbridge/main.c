@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <termios.h>
 #include <string.h>
 #include <signal.h>
@@ -122,6 +123,13 @@ int create_server(void) {
     int opt = 1;
     if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
         perror("setsockopt");
+        close(sock);
+        return -1;
+    }
+
+    // Disable Nagle's algorithm to reduce latency
+    if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt)) == -1) {
+        perror("setsockopt TCP_NODELAY");
         close(sock);
         return -1;
     }
