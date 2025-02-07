@@ -4,11 +4,7 @@
 #include <stdint.h>
 #include "aes.h"
 #include "uni_base64.h"
-
-const unsigned char AES_BLOB[16] = {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
+#include "../work/key.h"
 
 int get_aes_key(const unsigned char *input, unsigned char *aes_key) {
     memset(aes_key, 0, 16);
