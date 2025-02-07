@@ -72,14 +72,6 @@ if [ ${#KEY} -ne 64 ]; then
     exit 1
 fi
 
-if [ -f "$ENCRYPTED_IMG" ]; then
-    read -r -p "Warning: Output file '$ENCRYPTED_IMG' already exists. Overwrite? [y/N] " response
-    if [[ ! "$response" =~ ^[yY]$ ]]; then
-        echo "Operation cancelled"
-        exit 1
-    fi
-fi
-
 echo "Configuration:"
 echo "- Input directory: $ROOTFS_DIR"
 echo "- Output file: $ENCRYPTED_IMG"
