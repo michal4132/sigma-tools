@@ -320,8 +320,14 @@ int _nvram_generate(struct nvram_header *header, int rehash)
 		}
 	}
 
+
+	// TODO(mb): fix this garbage, it should add 0x00 to match aligment
 	/* End with a double NULL */
+	*ptr = '\0';  /* Write the second NULL terminator */
 	ptr += 1;
+	*ptr = '\0';  /* Write the second NULL terminator */
+	ptr += 1;
+	*ptr = '\0';  /* Write the second NULL terminator */
 
 	/* Set new length */
 	header->len = ROUNDUP(ptr - (char *) header, 4);
