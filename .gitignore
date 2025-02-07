@@ -10,3 +10,5 @@ nand_parser/nand_parser
 alt_app/socketbridge
 alt_app/disable_led
 user0.img
+playground
+alt_app/.binaries_timestamp

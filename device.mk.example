@@ -1,0 +1,11 @@
+# Device configuration example
+# Copy this file to device.mk and adjust the values
+
+# The partition key for encrypting the payload
+PARTITION_KEY = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
+# IP address of the target device
+IP = 192.168.0.112
+
+# SSH password for root user on the target device
+PASSWORD = your_password_here

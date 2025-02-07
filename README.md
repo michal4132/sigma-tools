@@ -2,52 +2,76 @@
 
 A collection of tools for working with Sigma firmware and system images.
 
-## Build System
+## Setup
 
-The project uses a Makefile-based build system with the following main targets:
+1. Install required packages:
+```bash
+apt-get install sshpass
+```
 
-### Main Targets
+2. Configure your device:
+```bash
+# Copy the example config
+cp device.mk.example work/device.mk
 
-- `make` or `make pack` (default) - Builds the socketbridge binary and packs it into an encrypted image
+# Edit the config with your values
+# - PARTITION_KEY
+# - IP: Your device's IP address
+# - PASSWORD: SSH password for root user
+nano work/device.mk
+```
+
+## Building and Installing
+
+### Building the Firmware
+
+To build the firmware image, run:
+```bash
+make
+```
+
+This will create a `user0.img` file that can be installed on your device.
+
+### Installing on Device
+
+The installation process consists of two steps:
+
+1. Upload the firmware to device:
+```bash
+make upload
+```
+
+2. Install and reboot (execute on device):
+```bash
+mtd write /tmp/user0.img USER0
+reboot
+```
+
+> **Note:** Make sure your device configuration in `work/device.mk` is correct before uploading.
+
+## Development and Build System
+
+The project uses a Makefile-based build system for development. Here's what you need to know:
+
+### Common Development Commands
+
+- `make` or `make pack` - Builds the socketbridge binary and packs it into an encrypted image (default target)
 - `make build` - Builds only the socketbridge binary
 - `make upload` - Builds and uploads the encrypted image to the target device
-- `make clean` - Removes all generated files
+- `make debug` - Build and upload playground binary
+- `make clean` - Removes all build artifacts and generated files
 
 ### Build Requirements
 
-- ARM GCC toolchain (placed in work/gcc-arm-8.2-2018.08-x86_64-arm-linux-gnueabihf/)
-- Private key file (configured in work/key.mk)
+- ARM GCC toolchain (placed in `work/gcc-arm-8.2-2018.08-x86_64-arm-linux-gnueabihf/`)
+- Device configuration including partition key (configured in `work/device.mk`)
 
-### Private Configuration
-
-The build system requires a private key for image encryption. This should be configured in `work/key.mk`:
-
-```makefile
-PARTITION_KEY="your-64-character-hex-key"
-```
-
-The `work` directory is excluded from git to keep sensitive information private.
-
-### Build Process
+### Build Process Overview
 
 1. The socketbridge binary is compiled using the ARM GCC toolchain
 2. The binary is packed into a SquashFS image
 3. The image is encrypted using the provided partition key
 4. The resulting `user0.img` can be uploaded to the device
-
-### Installation Guide
-
-To install the generated `user0.img` on your device:
-
-1. Upload the image to your device using one of these methods:
-   - Use `make upload` if your device is configured in the build system
-   - Use SSH to transfer the file
-
-2. On the device, write the image to the USER partition:
-   ```bash
-   mtd write /tmp/user0.img USER0
-   ```
-3. Reboot the device
 
 ## Tools Overview
 
