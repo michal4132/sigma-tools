@@ -35,6 +35,20 @@ The `work` directory is excluded from git to keep sensitive information private.
 3. The image is encrypted using the provided partition key
 4. The resulting `user0.img` can be uploaded to the device
 
+### Installation Guide
+
+To install the generated `user0.img` on your device:
+
+1. Upload the image to your device using one of these methods:
+   - Use `make upload` if your device is configured in the build system
+   - Use SSH to transfer the file
+
+2. On the device, write the image to the USER partition:
+   ```bash
+   mtd write /tmp/user0.img USER0
+   ```
+3. Reboot the device
+
 ## Tools Overview
 
 ### Image Encryption Tools
