@@ -15,7 +15,7 @@ else
 	@exit 1
 endif
 
-build: alt_app/socketbridge
+build: alt_app/socketbridge alt_app/disable_led
 
 alt_app/socketbridge: socketbridge/main.c
 	$(CC) $(CFLAGS) \
@@ -24,11 +24,28 @@ alt_app/socketbridge: socketbridge/main.c
 		$(LDFLAGS) \
 		-DVERSION=\"$(GIT_VERSION)\"
 
-user0.img: alt_app/socketbridge
+alt_app/disable_led: disable_led/main.c
+	$(CC) $(CFLAGS) \
+		disable_led/main.c \
+		-o alt_app/disable_led \
+		$(LDFLAGS) \
+		-DVERSION=\"$(GIT_VERSION)\"
+
+playground: playground.c
+	$(CC) $(CFLAGS) \
+		playground.c \
+		-o playground \
+		$(LDFLAGS) \
+		-DVERSION=\"$(GIT_VERSION)\"
+
+user0.img: alt_app/socketbridge alt_app/disable_led
 	$(MAKE) pack
+
+debug: playground
+	cat playground | ssh root@192.168.0.112 "cat >/tmp/playground"
 
 upload: user0.img
 	cat user0.img | ssh root@192.168.0.112 "cat >/tmp/user0.img"
 
 clean:
-	rm -f alt_app/socketbridge user0.img
+	rm -f alt_app/socketbridge alt_app/disable_led user0.img playground

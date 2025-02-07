@@ -34,6 +34,16 @@ fi
 
 echo "Mod start"
 
+# Disable LEDs
+$GW_INIT_RUN_DIR/disable_led
+echo 0 > /proc/tuya_netled_ctrl
+echo 4 > /sys/class/gpio/export
+echo out > /sys/class/gpio/gpio4/direction
+echo 5 > /sys/class/gpio/export
+echo out > /sys/class/gpio/gpio5/direction
+echo 0 > /sys/class/gpio/gpio4/value
+echo 0 > /sys/class/gpio/gpio5/value
+
 rm -rf $GW_RUN_DIR
 mkdir -p $GW_RUN_DIR
 
@@ -63,7 +73,6 @@ echo 1 > /sys/class/gpio/gpio48/value
 /tmp/tuya/syslogd_srv start
 /tmp/tuya/mdnsd_srv start
 /tmp/tuya/socketbridge_srv start
-
 /tmp/tuya/cpcd_srv start
 /tmp/tuya/zigbeed_srv start
 
