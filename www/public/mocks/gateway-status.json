@@ -1,0 +1,48 @@
+{
+  "gateway": {
+    "status": "online",
+    "uptime": "5 days 12 hours",
+    "ip": "192.168.1.100",
+    "version": "2.1.0"
+  },
+  "network": {
+    "zigbee": {
+      "status": "active",
+      "signal_strength": 85,
+      "channel": 15,
+      "pan_id": "0x1A2B"
+    },
+    "matter": {
+      "status": "active",
+      "fabric_id": "0xABCD1234"
+    }
+  },
+  "devices": [
+    {
+      "id": "1",
+      "name": "Living Room Light",
+      "type": "Light",
+      "protocol": "zigbee",
+      "status": "online",
+      "last_seen": "2 min ago"
+    },
+    {
+      "id": "2",
+      "name": "Kitchen Sensor",
+      "type": "Motion Sensor",
+      "protocol": "zigbee",
+      "status": "online",
+      "battery": 85,
+      "last_seen": "5 min ago"
+    },
+    {
+      "id": "3",
+      "name": "Door Lock",
+      "type": "Lock",
+      "protocol": "matter",
+      "status": "online",
+      "battery": 90,
+      "last_seen": "1 min ago"
+    }
+  ]
+}

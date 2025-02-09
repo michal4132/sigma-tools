@@ -6,13 +6,17 @@ GIT_VERSION := ${shell git describe --tags 2>/dev/null || echo "v0.0.1"}
 -include work/device.mk
 
 .DEFAULT_GOAL := user0.img
-.PHONY: all clean upload debug
+.PHONY: all clean upload debug web-deps web-build web-dev
 
-BINARIES = alt_app/socketbridge alt_app/disable_led
+BINARIES = alt_app/socketbridge alt_app/disable_led alt_app/httpd
 
 all: user0.img
 
 alt_app/socketbridge: socketbridge/main.c
+	@mkdir -p alt_app
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) -DVERSION=\"$(GIT_VERSION)\"
+
+alt_app/httpd: httpd/main.c
 	@mkdir -p alt_app
 	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS) -DVERSION=\"$(GIT_VERSION)\"
 
@@ -26,7 +30,7 @@ playground: playground.c
 alt_app/.binaries_timestamp: $(BINARIES)
 	@touch $@
 
-user0.img: alt_app/.binaries_timestamp
+user0.img: alt_app/.binaries_timestamp web-build
 ifndef PARTITION_KEY
 	$(error PARTITION_KEY not defined. Please create work/device.mk with PARTITION_KEY, IP and PASSWORD definitions)
 endif
@@ -50,5 +54,16 @@ ifndef PASSWORD
 endif
 	cat $< | SSHPASS=$(PASSWORD) sshpass -e ssh root@$(IP) "cat >/tmp/playground"
 
+# Web application targets
+web-deps:
+	cd www && npm install
+
+web-build: web-deps
+	cd www && npm run build
+
+web-dev: web-deps
+	cd www && npm start
+
 clean:
 	rm -f $(BINARIES) user0.img playground alt_app/.binaries_timestamp
+	rm -rf alt_app/www www/node_modules

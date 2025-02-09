@@ -1,0 +1,33 @@
+{
+  "network": {
+    "hostname": "gateway-device",
+    "dhcp": true,
+    "ip": "192.168.1.100",
+    "netmask": "255.255.255.0",
+    "gateway": "192.168.1.1",
+    "dns_primary": "8.8.8.8",
+    "dns_secondary": "8.8.4.4"
+  },
+  "zigbee": {
+    "enabled": true,
+    "channel": 15,
+    "pan_id": "0x1A2B",
+    "permit_join": false
+  },
+  "matter": {
+    "enabled": true,
+    "fabric_id": "0xABCD1234",
+    "commission_mode": false
+  },
+  "hardware": {
+    "status_led": true,
+    "network_led": true
+  },
+  "system": {
+    "name": "Zigbee Gateway",
+    "timezone": "Europe/Warsaw",
+    "log_level": "info",
+    "ssh_enabled": true,
+    "ssh_port": 22
+  }
+}

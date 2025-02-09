@@ -1,0 +1,28 @@
+{
+  "logs": [
+    {
+      "id": 1,
+      "timestamp": "2025-02-08 10:15:23",
+      "level": "info",
+      "message": "System started successfully"
+    },
+    {
+      "id": 2,
+      "timestamp": "2025-02-08 10:15:24",
+      "level": "info",
+      "message": "Network interface eth0 initialized"
+    },
+    {
+      "id": 3,
+      "timestamp": "2025-02-08 10:15:25",
+      "level": "warning",
+      "message": "High CPU usage detected (85%)"
+    },
+    {
+      "id": 4,
+      "timestamp": "2025-02-08 10:15:26",
+      "level": "error",
+      "message": "Failed to connect to update server"
+    }
+  ]
+}
