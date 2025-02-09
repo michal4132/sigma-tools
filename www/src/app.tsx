@@ -80,7 +80,7 @@ export function App() {
       </aside>
 
       {/* Main content */}
-      <main className="sm:ml-64 p-4 sm:p-8 h-screen overflow-y-auto scrollbar scrollbar-thumb-bg-accent scrollbar-track-bg-secondary">
+      <main className="sm:ml-64 p-4 sm:p-8 min-h-screen sm:h-screen overflow-y-auto scrollbar scrollbar-thumb-bg-accent scrollbar-track-bg-secondary">
         <Router>
           <Route path="/" component={() => <Dashboard MenuButton={MenuButton} />} />
           <Route path="/settings" component={() => <Settings MenuButton={MenuButton} />} />

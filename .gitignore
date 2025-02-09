@@ -9,6 +9,7 @@ gen_nvram_zone/gen_nvram_zone
 nand_parser/nand_parser
 alt_app/socketbridge
 alt_app/disable_led
+alt_app/httpd
 user0.img
 playground
 alt_app/.binaries_timestamp

@@ -10,10 +10,7 @@ export async function apiRequest<T>(
 ): Promise<T> {
   try {
     const { method = 'GET', body } = options;
-
-    // For development, use mock files
-    const isMockPath = path.startsWith('/mocks/');
-    const url = isMockPath ? path : getApiUrl(path);
+    const url = getApiUrl(path);
 
     const response = await fetch(url, {
       method,

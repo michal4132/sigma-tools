@@ -75,6 +75,7 @@ echo 1 > /sys/class/gpio/gpio48/value
 /tmp/tuya/socketbridge_srv start
 /tmp/tuya/cpcd_srv start
 /tmp/tuya/zigbeed_srv start
+/tmp/tuya/httpd_srv start
 
 echo "End"
 exit 0

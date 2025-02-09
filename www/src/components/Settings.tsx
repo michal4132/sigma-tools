@@ -150,7 +150,7 @@ export function Settings({ MenuButton }: Props) {
                   return (
                     <div key={key}>
                       <div className="flex flex-row justify-between items-center gap-4">
-                        <span className="text-text-secondary">{formatLabel(key)}</span>
+                        <span className="text-text-secondary shrink-0">{formatLabel(key)}</span>
                         {typeof value === 'boolean' ? (
                           <label className="relative inline-flex items-center cursor-pointer sm:self-center">
                             <input
@@ -174,7 +174,7 @@ export function Settings({ MenuButton }: Props) {
                               key,
                               (e.target as HTMLInputElement).value
                             )}
-                            className="bg-bg-accent text-text-primary px-3 py-2 rounded-md border border-bg-accent focus:border-primary focus:outline-none w-full sm:w-auto"
+                            className="bg-bg-accent text-text-primary px-3 py-2 rounded-md border border-bg-accent focus:border-primary focus:outline-none w-[200px]"
                           />
                         )}
                       </div>
