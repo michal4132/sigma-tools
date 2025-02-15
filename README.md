@@ -126,6 +126,22 @@ Example:
 - All temporary files are cleaned up after operation
 - The scripts require sudo privileges for mounting and encryption operations
 
+## Planned Changes
+
+### Web UI Improvements
+- Add reboot button functionality in the Web UI settings page
+- Most of the Web UI is currently using mock data, needs to be connected to real backend APIs:
+  - Device logs
+  - Matter configuration
+  - Network settings
+  - Zigbee settings
+  - System metrics and status
+
+### Backend Integration
+- Implement Matter protocol support
+- Merge LED control functionality (`disable_led`) into the main application
+- Add proper API endpoints for all Web UI features
+
 ## References
 
 Links:
