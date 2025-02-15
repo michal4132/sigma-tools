@@ -137,7 +137,7 @@ static enum MHD_Result request_handler(void *cls, struct MHD_Connection *connect
 int main(void) {
     struct MHD_Daemon *daemon;
     
-    daemon = MHD_start_daemon(MHD_USE_INTERNAL_POLLING_THREAD, 8080, NULL, NULL,
+    daemon = MHD_start_daemon(MHD_USE_INTERNAL_POLLING_THREAD, 80, NULL, NULL,
                             &request_handler, NULL, MHD_OPTION_END);
     if (NULL == daemon) return 1;
     
